@@ -9,7 +9,7 @@ from abc import ABC, abstractmethod
 from datetime import datetime
 from typing import Literal, Optional
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 Category = Literal["billing", "technical", "account", "general"]
 
@@ -50,6 +50,44 @@ class PromptConfig(BaseModel):
     system_prompt: str = Field(min_length=1)
     user_template: str = Field(min_length=1, description="Must contain {email}.")
     few_shot_examples: list[FewShotExample] = Field(default_factory=list)
+
+
+Difficulty = Literal["easy", "medium", "hard"]
+
+
+class GoldenCase(BaseModel):
+    """One labeled test case. `id` is stable across dataset versions."""
+
+    model_config = ConfigDict(frozen=True, extra="forbid")
+
+    id: str = Field(pattern=r"^[a-z]+-\d{3,}$")
+    input: EmailInput
+    expected: EmailClassification
+    expected_difficulty: Difficulty
+    tags: list[str] = Field(default_factory=list)
+    notes: str = Field(min_length=1, description="Why this case matters.")
+
+
+class GoldenDataset(BaseModel):
+    """A versioned golden dataset. A new version means the eval bar changed."""
+
+    model_config = ConfigDict(frozen=True, extra="forbid")
+
+    dataset_id: str = Field(min_length=1)
+    version: str = Field(pattern=r"^v\d+$")
+    created_at: datetime
+    prompt_id: str = Field(min_length=1)
+    description: str = ""
+    changes: str = Field(min_length=1, description="What changed since the previous version.")
+    cases: list[GoldenCase] = Field(min_length=1)
+
+    @model_validator(mode="after")
+    def _unique_ids(self) -> "GoldenDataset":
+        ids = [c.id for c in self.cases]
+        duplicates = sorted({i for i in ids if ids.count(i) > 1})
+        if duplicates:
+            raise ValueError(f"duplicate case ids: {duplicates}")
+        return self
 
 
 class PromptLoader(ABC):

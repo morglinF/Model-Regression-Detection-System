@@ -1,0 +1,762 @@
+{
+  "dataset_id": "email_classifier",
+  "version": "v1",
+  "created_at": "2026-09-27T00:00:00Z",
+  "prompt_id": "email_classifier",
+  "description": "Golden dataset for the support email classifier. Category is exact-match; summary is a reference for semantic comparison.",
+  "changes": "Initial dataset: 50 cases, deliberately weighted toward edge cases (ambiguous, extremely short, typos, mixed language, sarcastic).",
+  "cases": [
+    {
+      "id": "ec-001",
+      "input": {
+        "email": "Hi,\nI was charged twice for my March subscription ($29.99 on the 3rd and again on the 4th). Can you refund the duplicate charge?\nThanks,\nDana"
+      },
+      "expected": {
+        "category": "billing",
+        "summary": "Customer wants a refund for a duplicate March subscription charge."
+      },
+      "expected_difficulty": "easy",
+      "tags": [
+        "clear"
+      ],
+      "notes": "Baseline billing case. If this fails, the prompt is fundamentally broken."
+    },
+    {
+      "id": "ec-002",
+      "input": {
+        "email": "Hello, I'd like to request a copy of my invoice for February for my company's expense report. Our VAT number needs to be on it: GB123456789."
+      },
+      "expected": {
+        "category": "billing",
+        "summary": "Customer requests a February invoice that includes their company VAT number."
+      },
+      "expected_difficulty": "easy",
+      "tags": [
+        "clear"
+      ],
+      "notes": "Billing request with no money problem. Checks the model doesn't only map complaints to billing."
+    },
+    {
+      "id": "ec-003",
+      "input": {
+        "email": "I downgraded from Pro to Basic last week but I was still billed the Pro price this month. Please fix this and refund the difference."
+      },
+      "expected": {
+        "category": "billing",
+        "summary": "Customer wants a refund of the price difference after being billed for Pro despite downgrading to Basic."
+      },
+      "expected_difficulty": "easy",
+      "tags": [
+        "clear"
+      ],
+      "notes": "Mentions plan names that also appear in account cases; the money ask should dominate."
+    },
+    {
+      "id": "ec-004",
+      "input": {
+        "email": "My credit card expired and I need to update the payment method on file. Where can I do that before my renewal on Friday?"
+      },
+      "expected": {
+        "category": "billing",
+        "summary": "Customer wants to know how to update their expired payment card before renewal."
+      },
+      "expected_difficulty": "easy",
+      "tags": [
+        "clear"
+      ],
+      "notes": "A 'how do I' question that is still billing. Guards against how-to questions drifting to technical."
+    },
+    {
+      "id": "ec-005",
+      "input": {
+        "email": "This is ridiculous. I cancelled MONTHS ago and you are STILL taking money from my account. I want every cent back or I'm disputing it with my bank."
+      },
+      "expected": {
+        "category": "billing",
+        "summary": "Customer demands a full refund for charges made after they cancelled."
+      },
+      "expected_difficulty": "medium",
+      "tags": [
+        "angry"
+      ],
+      "notes": "Hostile tone plus the word 'account'. Tests that emotion and keyword overlap don't override the refund intent."
+    },
+    {
+      "id": "ec-006",
+      "input": {
+        "email": "refund"
+      },
+      "expected": {
+        "category": "billing",
+        "summary": "Customer wants a refund."
+      },
+      "expected_difficulty": "medium",
+      "tags": [
+        "extremely_short"
+      ],
+      "notes": "One-word email with a strong keyword. The summary must not invent details that aren't there."
+    },
+    {
+      "id": "ec-007",
+      "input": {
+        "email": "cancel"
+      },
+      "expected": {
+        "category": "billing",
+        "summary": "Customer wants to cancel, most likely their subscription."
+      },
+      "expected_difficulty": "hard",
+      "tags": [
+        "extremely_short",
+        "ambiguous"
+      ],
+      "notes": "One word that could be billing (cancel subscription) or account (close account). Labeled billing because cancellation usually means stopping payment. Watch this case for label flip-flopping between versions."
+    },
+    {
+      "id": "ec-008",
+      "input": {
+        "email": "hey there, my free trail ended yesterday and i got charged even tho i never entered a card?? how did that hapen, pls refund"
+      },
+      "expected": {
+        "category": "billing",
+        "summary": "Customer wants a refund for a charge after their free trial ended, saying they never entered a card."
+      },
+      "expected_difficulty": "medium",
+      "tags": [
+        "typos"
+      ],
+      "notes": "'trail' for 'trial' and dropped letters. Tests robustness to realistic typing errors."
+    },
+    {
+      "id": "ec-009",
+      "input": {
+        "email": "Hi team, mera payment do baar deduct ho gaya for the monthly plan. Please refund karo jaldi, thanks."
+      },
+      "expected": {
+        "category": "billing",
+        "summary": "Customer wants a refund because their monthly plan payment was deducted twice."
+      },
+      "expected_difficulty": "medium",
+      "tags": [
+        "mixed_language"
+      ],
+      "notes": "Hindi-English code-switching. The key facts (deducted twice) are in Hindi, so an English-only reading misses them. Summary must be in English."
+    },
+    {
+      "id": "ec-010",
+      "input": {
+        "email": "Wow, charged three times for one month. Truly innovative billing. Can't wait to see what creative number you come up with next month!"
+      },
+      "expected": {
+        "category": "billing",
+        "summary": "Customer is sarcastically complaining about being charged three times in one month and implicitly wants it corrected."
+      },
+      "expected_difficulty": "hard",
+      "tags": [
+        "sarcastic"
+      ],
+      "notes": "Positive words ('innovative', 'can't wait') with negative intent. The summary must capture the complaint, not the literal praise."
+    },
+    {
+      "id": "ec-011",
+      "input": {
+        "email": "My payment keeps failing at checkout with error code 402. I've tried two different cards."
+      },
+      "expected": {
+        "category": "billing",
+        "summary": "Customer's payment keeps failing at checkout with error 402 despite trying two cards."
+      },
+      "expected_difficulty": "hard",
+      "tags": [
+        "ambiguous"
+      ],
+      "notes": "Could be billing or technical (it's an error code). Labeled billing because the customer is trying to pay. A good boundary case for prompt wording changes."
+    },
+    {
+      "id": "ec-012",
+      "input": {
+        "email": "Hi, I got charged for 5 seats but we only have 3 users. Also the dashboard has been a bit slow lately, but mainly I need the billing sorted."
+      },
+      "expected": {
+        "category": "billing",
+        "summary": "Customer wants billing corrected from 5 seats to their actual 3 users."
+      },
+      "expected_difficulty": "medium",
+      "tags": [
+        "multi_issue"
+      ],
+      "notes": "Two issues, and the customer states which one matters. Tests following the primary intent rather than the last-mentioned issue."
+    },
+    {
+      "id": "ec-013",
+      "input": {
+        "email": "Do you offer annual billing with a discount? We're currently paying monthly for 12 seats and would like to switch if it saves money."
+      },
+      "expected": {
+        "category": "billing",
+        "summary": "Customer asks whether they can switch 12 seats to discounted annual billing."
+      },
+      "expected_difficulty": "hard",
+      "tags": [
+        "ambiguous"
+      ],
+      "notes": "Pricing question that could be general. Labeled billing because they're an existing payer changing their billing. Pair with ec-050, the pre-sales version."
+    },
+    {
+      "id": "ec-014",
+      "input": {
+        "email": "The mobile app crashes every time I try to open the Reports tab. I'm on an iPhone 14 with iOS 17.4 and the latest app version."
+      },
+      "expected": {
+        "category": "technical",
+        "summary": "Customer reports the iOS app crashes when opening the Reports tab."
+      },
+      "expected_difficulty": "easy",
+      "tags": [
+        "clear"
+      ],
+      "notes": "Baseline technical case with device details."
+    },
+    {
+      "id": "ec-015",
+      "input": {
+        "email": "Our API calls to /v2/orders started returning 500 errors about an hour ago. Nothing changed on our side. Is there an outage?"
+      },
+      "expected": {
+        "category": "technical",
+        "summary": "Customer reports 500 errors from the /v2/orders API endpoint and asks if there is an outage."
+      },
+      "expected_difficulty": "easy",
+      "tags": [
+        "clear"
+      ],
+      "notes": "Developer-style email. Checks the summary keeps the specific endpoint and error code."
+    },
+    {
+      "id": "ec-016",
+      "input": {
+        "email": "CSV export is broken. The file downloads but all the dates show up as ##### or random numbers when I open it in Excel."
+      },
+      "expected": {
+        "category": "technical",
+        "summary": "Customer reports that dates in CSV exports display incorrectly in Excel."
+      },
+      "expected_difficulty": "easy",
+      "tags": [
+        "clear"
+      ],
+      "notes": "Contains odd characters (#####) that could confuse parsing or rendering."
+    },
+    {
+      "id": "ec-017",
+      "input": {
+        "email": "I'm not receiving any email notifications anymore, even though they're turned on in settings. I've checked my spam folder."
+      },
+      "expected": {
+        "category": "technical",
+        "summary": "Customer reports they are no longer receiving email notifications despite having them enabled."
+      },
+      "expected_difficulty": "easy",
+      "tags": [
+        "clear"
+      ],
+      "notes": "Mentions 'settings', which overlaps with account vocabulary."
+    },
+    {
+      "id": "ec-018",
+      "input": {
+        "email": "Your latest update deleted half my saved templates. Hours of work GONE. How do I get them back??"
+      },
+      "expected": {
+        "category": "technical",
+        "summary": "Customer wants to recover saved templates that disappeared after the latest update."
+      },
+      "expected_difficulty": "medium",
+      "tags": [
+        "angry"
+      ],
+      "notes": "Angry, all-caps data-loss report. Tests that tone doesn't distort the summary."
+    },
+    {
+      "id": "ec-019",
+      "input": {
+        "email": "app broken"
+      },
+      "expected": {
+        "category": "technical",
+        "summary": "Customer reports the app is broken."
+      },
+      "expected_difficulty": "medium",
+      "tags": [
+        "extremely_short"
+      ],
+      "notes": "Two words with a clear technical signal. Summary must not invent which feature is broken."
+    },
+    {
+      "id": "ec-020",
+      "input": {
+        "email": "doesnt work"
+      },
+      "expected": {
+        "category": "technical",
+        "summary": "Customer reports that something is not working, without saying what."
+      },
+      "expected_difficulty": "hard",
+      "tags": [
+        "extremely_short"
+      ],
+      "notes": "No subject and no object. Technical is the most reasonable guess. Tests behavior on near-zero information."
+    },
+    {
+      "id": "ec-021",
+      "input": {
+        "email": "the sync betwen my phone and laptop isnt working, changes i make on the laptop dont show up on the phone at all"
+      },
+      "expected": {
+        "category": "technical",
+        "summary": "Customer reports changes made on their laptop are not syncing to their phone."
+      },
+      "expected_difficulty": "medium",
+      "tags": [
+        "typos"
+      ],
+      "notes": "Lowercase, missing apostrophes and misspellings."
+    },
+    {
+      "id": "ec-022",
+      "input": {
+        "email": "Hola, since the update la app se cierra cada vez que abro el calendario. I already reinstalled it, no funciona."
+      },
+      "expected": {
+        "category": "technical",
+        "summary": "Customer reports the app closes every time they open the calendar since the update, even after reinstalling."
+      },
+      "expected_difficulty": "medium",
+      "tags": [
+        "mixed_language"
+      ],
+      "notes": "Spanish-English code-switching. The actual symptom (app closes on opening calendar) is in Spanish."
+    },
+    {
+      "id": "ec-023",
+      "input": {
+        "email": "Great, the app crashed again. Fifth time today. Really stellar engineering, keep up the amazing work."
+      },
+      "expected": {
+        "category": "technical",
+        "summary": "Customer is sarcastically reporting that the app has crashed five times today."
+      },
+      "expected_difficulty": "hard",
+      "tags": [
+        "sarcastic"
+      ],
+      "notes": "Praise words ('great', 'stellar', 'amazing') masking a bug report. A literal reading might file it as general feedback."
+    },
+    {
+      "id": "ec-024",
+      "input": {
+        "email": "I keep getting logged out every few minutes while I'm working. It's making the app basically unusable."
+      },
+      "expected": {
+        "category": "technical",
+        "summary": "Customer reports being repeatedly logged out every few minutes, making the app unusable."
+      },
+      "expected_difficulty": "hard",
+      "tags": [
+        "ambiguous"
+      ],
+      "notes": "Could be account (login) or technical. Labeled technical because it's a session bug, not a credentials or access problem."
+    },
+    {
+      "id": "ec-025",
+      "input": {
+        "email": "When I export a report to PDF the charts are missing. Is that a bug or just not supported?"
+      },
+      "expected": {
+        "category": "technical",
+        "summary": "Customer asks whether missing charts in PDF report exports are a bug or an unsupported feature."
+      },
+      "expected_difficulty": "hard",
+      "tags": [
+        "ambiguous"
+      ],
+      "notes": "Could be technical or general (product capability question). Labeled technical because it describes broken-looking behavior."
+    },
+    {
+      "id": "ec-026",
+      "input": {
+        "email": "Hi,\n\nSince Tuesday, our dashboards have been loading extremely slowly, sometimes 30+ seconds, and occasionally time out completely. This happens for all 8 people on our team, across different browsers and networks, so I don't think it's on our end. We've tried clearing caches and logging in again. It's particularly bad on the Analytics page with date ranges over 30 days. Could your engineering team investigate?\n\nThanks,\nMarcus"
+      },
+      "expected": {
+        "category": "technical",
+        "summary": "Customer reports dashboards, especially Analytics with long date ranges, have been very slow or timing out for their whole team since Tuesday."
+      },
+      "expected_difficulty": "medium",
+      "tags": [
+        "long"
+      ],
+      "notes": "Long email. Tests that the summary compresses to one sentence and keeps the key detail (Analytics, long date ranges)."
+    },
+    {
+      "id": "ec-027",
+      "input": {
+        "email": "Please change the email address on my account from old.name@example.com to new.name@example.com."
+      },
+      "expected": {
+        "category": "account",
+        "summary": "Customer wants to change the email address on their account."
+      },
+      "expected_difficulty": "easy",
+      "tags": [
+        "clear"
+      ],
+      "notes": "Baseline account case."
+    },
+    {
+      "id": "ec-028",
+      "input": {
+        "email": "How do I add a new team member to our workspace and give them admin permissions?"
+      },
+      "expected": {
+        "category": "account",
+        "summary": "Customer wants to add a team member to their workspace with admin permissions."
+      },
+      "expected_difficulty": "easy",
+      "tags": [
+        "clear"
+      ],
+      "notes": "A 'how do I' question that is account, not technical."
+    },
+    {
+      "id": "ec-029",
+      "input": {
+        "email": "I got a new phone and lost access to my authenticator app, so I can't get past two-factor login. Can you help me get back in?"
+      },
+      "expected": {
+        "category": "account",
+        "summary": "Customer is locked out by two-factor authentication after losing their authenticator app and needs access restored."
+      },
+      "expected_difficulty": "easy",
+      "tags": [
+        "clear"
+      ],
+      "notes": "Mentions a phone and an app, which pull toward technical."
+    },
+    {
+      "id": "ec-030",
+      "input": {
+        "email": "Someone logged into my account from another country and changed my settings!!! Lock it down NOW and tell me what they accessed."
+      },
+      "expected": {
+        "category": "account",
+        "summary": "Customer reports unauthorized access to their account and wants it secured and the activity reviewed."
+      },
+      "expected_difficulty": "medium",
+      "tags": [
+        "angry"
+      ],
+      "notes": "Security incident in an angry tone. High-stakes if misrouted."
+    },
+    {
+      "id": "ec-031",
+      "input": {
+        "email": "locked out. help"
+      },
+      "expected": {
+        "category": "account",
+        "summary": "Customer is locked out of their account and needs help."
+      },
+      "expected_difficulty": "medium",
+      "tags": [
+        "extremely_short"
+      ],
+      "notes": "Three words with a clear account signal."
+    },
+    {
+      "id": "ec-032",
+      "input": {
+        "email": "login??"
+      },
+      "expected": {
+        "category": "account",
+        "summary": "Customer is having trouble logging in."
+      },
+      "expected_difficulty": "hard",
+      "tags": [
+        "extremely_short",
+        "ambiguous"
+      ],
+      "notes": "One word that could be account (credentials) or technical (login page broken). Labeled account as the more common cause."
+    },
+    {
+      "id": "ec-033",
+      "input": {
+        "email": "cant log in, it says my acount is suspended?? i didnt do anything wrong"
+      },
+      "expected": {
+        "category": "account",
+        "summary": "Customer wants to know why their account is suspended and regain access."
+      },
+      "expected_difficulty": "medium",
+      "tags": [
+        "typos"
+      ],
+      "notes": "'acount' misspelled. The key signal word itself has a typo."
+    },
+    {
+      "id": "ec-034",
+      "input": {
+        "email": "Hi, ich kann mich nicht einloggen since I changed my password yesterday. Bitte helfen Sie mir, it's urgent."
+      },
+      "expected": {
+        "category": "account",
+        "summary": "Customer cannot log in since changing their password yesterday and urgently needs help."
+      },
+      "expected_difficulty": "medium",
+      "tags": [
+        "mixed_language"
+      ],
+      "notes": "German-English code-switching. 'can't log in' is only stated in German."
+    },
+    {
+      "id": "ec-035",
+      "input": {
+        "email": "Thanks SO much for locking me out of my own account right before my big client presentation. Perfect timing, really appreciated."
+      },
+      "expected": {
+        "category": "account",
+        "summary": "Customer is sarcastically complaining about being locked out of their account and needs access restored."
+      },
+      "expected_difficulty": "hard",
+      "tags": [
+        "sarcastic"
+      ],
+      "notes": "Opens with 'Thanks' like a general thank-you note. Tests that sarcasm isn't misread as gratitude."
+    },
+    {
+      "id": "ec-036",
+      "input": {
+        "email": "I upgraded to Pro and the charge went through, but my account still says Basic."
+      },
+      "expected": {
+        "category": "account",
+        "summary": "Customer upgraded to Pro and was charged, but their account still shows the Basic plan."
+      },
+      "expected_difficulty": "hard",
+      "tags": [
+        "ambiguous"
+      ],
+      "notes": "Could be billing or account. Labeled account because payment succeeded and the problem is the account's plan status."
+    },
+    {
+      "id": "ec-037",
+      "input": {
+        "email": "Please delete my account and make sure you stop billing me."
+      },
+      "expected": {
+        "category": "account",
+        "summary": "Customer wants their account deleted and billing stopped."
+      },
+      "expected_difficulty": "hard",
+      "tags": [
+        "ambiguous"
+      ],
+      "notes": "Could be account or billing. Labeled account because deletion is the primary action and stopping billing follows from it."
+    },
+    {
+      "id": "ec-038",
+      "input": {
+        "email": "I asked for a password reset three times and the email never arrives."
+      },
+      "expected": {
+        "category": "account",
+        "summary": "Customer cannot reset their password because the reset email never arrives."
+      },
+      "expected_difficulty": "hard",
+      "tags": [
+        "ambiguous"
+      ],
+      "notes": "Could be account or technical (email delivery). Labeled account because the goal is regaining access."
+    },
+    {
+      "id": "ec-039",
+      "input": {
+        "email": "Hello,\nI want to know more about your products."
+      },
+      "expected": {
+        "category": "general",
+        "summary": "Customer wants more information about the company's products."
+      },
+      "expected_difficulty": "easy",
+      "tags": [
+        "clear"
+      ],
+      "notes": "The demo email from email_classifier.py. Baseline general case."
+    },
+    {
+      "id": "ec-040",
+      "input": {
+        "email": "What are your support hours? I'm in Sydney and want to know when I can reach someone by phone."
+      },
+      "expected": {
+        "category": "general",
+        "summary": "Customer asks for support hours and phone availability from Sydney."
+      },
+      "expected_difficulty": "easy",
+      "tags": [
+        "clear"
+      ],
+      "notes": "Mentions 'support', which could pull toward technical."
+    },
+    {
+      "id": "ec-041",
+      "input": {
+        "email": "Just wanted to say your team was super helpful last week when I had a question. Thanks, Alex!"
+      },
+      "expected": {
+        "category": "general",
+        "summary": "Customer is thanking the support team for their help."
+      },
+      "expected_difficulty": "easy",
+      "tags": [
+        "clear"
+      ],
+      "notes": "Genuine gratitude. Contrast with the sarcastic cases, which use similar words."
+    },
+    {
+      "id": "ec-042",
+      "input": {
+        "email": "Do you have a partner or reseller program? We're an agency and would like to offer your tool to our clients."
+      },
+      "expected": {
+        "category": "general",
+        "summary": "Customer asks about a partner or reseller program for their agency."
+      },
+      "expected_difficulty": "easy",
+      "tags": [
+        "clear"
+      ],
+      "notes": "Business-development inquiry."
+    },
+    {
+      "id": "ec-043",
+      "input": {
+        "email": "Is your platform GDPR compliant, and where is customer data stored?"
+      },
+      "expected": {
+        "category": "general",
+        "summary": "Customer asks about GDPR compliance and where data is stored."
+      },
+      "expected_difficulty": "easy",
+      "tags": [
+        "clear"
+      ],
+      "notes": "Mentions 'data', which could pull toward account or technical."
+    },
+    {
+      "id": "ec-044",
+      "input": {
+        "email": "It would be great if you added a dark mode. Any plans for that?"
+      },
+      "expected": {
+        "category": "general",
+        "summary": "Customer requests a dark mode feature and asks if it is planned."
+      },
+      "expected_difficulty": "medium",
+      "tags": [
+        "clear"
+      ],
+      "notes": "Feature request, not a bug. Tests that product-related emails aren't all labeled technical."
+    },
+    {
+      "id": "ec-045",
+      "input": {
+        "email": "hi"
+      },
+      "expected": {
+        "category": "general",
+        "summary": "Customer sent a greeting with no specific request."
+      },
+      "expected_difficulty": "hard",
+      "tags": [
+        "extremely_short"
+      ],
+      "notes": "No intent at all. General is the only defensible label, and the summary must not invent a request."
+    },
+    {
+      "id": "ec-046",
+      "input": {
+        "email": "?"
+      },
+      "expected": {
+        "category": "general",
+        "summary": "Customer sent a single question mark with no content."
+      },
+      "expected_difficulty": "hard",
+      "tags": [
+        "extremely_short"
+      ],
+      "notes": "Single character. Tests graceful handling of empty-ish input."
+    },
+    {
+      "id": "ec-047",
+      "input": {
+        "email": "do u guys have an office in london? wanted to drop by"
+      },
+      "expected": {
+        "category": "general",
+        "summary": "Customer asks whether the company has a London office they could visit."
+      },
+      "expected_difficulty": "medium",
+      "tags": [
+        "typos"
+      ],
+      "notes": "Text-speak ('u', 'guys')."
+    },
+    {
+      "id": "ec-048",
+      "input": {
+        "email": "Hello! Gusto ko lang malaman if you have discounts for students, estudyante pa kasi ako."
+      },
+      "expected": {
+        "category": "general",
+        "summary": "Customer, a student, asks whether student discounts are available."
+      },
+      "expected_difficulty": "medium",
+      "tags": [
+        "mixed_language"
+      ],
+      "notes": "Tagalog-English code-switching. The fact that they are a student is only in Tagalog."
+    },
+    {
+      "id": "ec-049",
+      "input": {
+        "email": "Oh wonderful, three weeks and still no reply to my simple question about whether you have a Windows app. Amazing customer service."
+      },
+      "expected": {
+        "category": "general",
+        "summary": "Customer sarcastically complains about no reply in three weeks and asks whether there is a Windows app."
+      },
+      "expected_difficulty": "hard",
+      "tags": [
+        "sarcastic"
+      ],
+      "notes": "Sarcasm about support speed wrapped around a general product question. The summary must include the actual question."
+    },
+    {
+      "id": "ec-050",
+      "input": {
+        "email": "Before I sign up, does the Basic plan include the reporting features, or do I need Pro?"
+      },
+      "expected": {
+        "category": "general",
+        "summary": "Prospective customer asks whether reporting features are included in the Basic plan or require Pro."
+      },
+      "expected_difficulty": "hard",
+      "tags": [
+        "ambiguous"
+      ],
+      "notes": "Could be billing (plans). Labeled general because they aren't a customer yet. Pair with ec-013, the existing-payer version."
+    }
+  ]
+}
